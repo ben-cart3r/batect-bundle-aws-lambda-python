@@ -1,0 +1,68 @@
+containers:
+  lambda:
+    build_directory: <{batect.project_directory}
+    ports:
+      - local: 8080
+        container: 8080
+    additional_hostnames:
+      - lambda
+
+  test_runner:
+    build_directory: .batect/test_runner
+    working_directory: /code
+    volumes:
+      - local: <{batect.project_directory}
+        container: /code
+
+tasks:
+  shell:
+    description: Create a shell in the test container
+    run:
+      container: test_runner
+      entrypoint: /bin/bash
+
+  test:unit:
+    description: Run integration tests
+    run:
+      container: test_runner 
+      command: "pytest /code/test/unit"
+
+  test:
+    description: Run all tests
+    prerequisites:
+      - test:unit
+      - test:integration
+
+  fmt:black:
+    description: Format python files
+    run:
+      container: test_runner
+      command: "black --check ."
+
+  fmt:black_fix:
+    description: Format python files
+    run:
+      container: test_runner
+      command: "black ."
+  
+  fmt:isort:
+    description: Sort python dependency imports
+    run:
+      container: test_runner
+      command: "isort --check --profile black ."
+
+  fmt:isort_fix:
+    description: Sort python dependency imports
+    run:
+      container: test_runner
+      command: "isort --profile black ."
+
+  fmt:
+    prerequisites:
+      - fmt:black
+      - fmt:isort
+
+  fmt_fix:
+    prerequisites:
+      - fmt:black_fix
+      - fmt:isort_fix

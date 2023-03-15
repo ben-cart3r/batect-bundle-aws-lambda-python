@@ -17,6 +17,8 @@ containers:
 tasks:
   shell:
     description: Create a shell in the test container
+    dependencies:
+      - lambda
     run:
       container: test_runner
       entrypoint: /bin/bash
